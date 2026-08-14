@@ -141,7 +141,7 @@ public class MediaContentServiceImpl implements MediaContentService {
     }
 
     @Override
-  //  @Cacheable(value = "mediaContents", key = "#id")
+    @Cacheable(value = "mediaContents", key = "#id")
     public MediaContentResponse changeVisibility(Status status, long id) {
         MediaContentResponse mediaContentResponse = findById(id);
 
