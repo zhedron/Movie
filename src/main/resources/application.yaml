@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: Movie
+  datasource:
+    url: jdbc:mysql://localhost:3306/movie?createDatabaseIfNotExist=true
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+  servlet:
+    multipart:
+      max-request-size: 2GB
+      max-file-size: 5GB
+  data:
+    redis:
+      host: redis
+jwt:
+  key:
+
+springdoc:
+  swagger-ui:
+    path: "swagger-ui.html"
