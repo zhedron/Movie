@@ -17,7 +17,7 @@ spring:
     redis:
       host: redis
 jwt:
-  key:
+  key: ${JWT_KEY}
 
 springdoc:
   swagger-ui:
