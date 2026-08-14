@@ -6,16 +6,13 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import zhedron.movie.dto.response.FilmResponse;
-import zhedron.movie.dto.response.MediaContentResponse;
 import zhedron.movie.entity.Film;
 import zhedron.movie.entity.MediaContent;
 import zhedron.movie.exceptions.FilmNotFoundException;
 import zhedron.movie.mappers.FilmMapper;
-import zhedron.movie.mappers.MediaContentMapper;
 import zhedron.movie.repository.FilmRepository;
 import zhedron.movie.repository.MediaContentRepository;
 import zhedron.movie.services.FilmService;
-import zhedron.movie.services.MediaContentService;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -1,5 +1,4 @@
 # Stack
-* **
 
 * **Java 17**
 * **Docker**
@@ -11,7 +10,6 @@
 * **MySQL**
 
 # Get Started
-* **
 This is an example of how way give instructions on setting up your project locally.
 
 ### Prerequisites
@@ -60,7 +58,6 @@ And download JDK 17 version
 * [Java 17](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
 
 # Run program
-* **
 After install run this command for build application
 
 ```bash
@@ -68,11 +65,9 @@ docker compose up
 ```
 
 # Secret Key
-* **
 Link for generate secret key for JWT
 * [Secret Key](https://jwtsecrets.com/#generator)
 
 # API Documentation
-* **
 Once the application is running, you can explore and test the endpoints via Swagger UI:
 [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
