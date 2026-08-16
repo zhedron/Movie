@@ -2,6 +2,7 @@ package zhedron.movie.services.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @CachePut(value = "comments", key = "#result.id()")
     public CommentResponse addComment(CommentRequest commentRequest, long mediaContentId) {
         User user = userService.getCurrentUser();
 

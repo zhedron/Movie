@@ -1,6 +1,7 @@
 package zhedron.movie.services.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,6 +33,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @CachePut(value = "users", key = "#result.id()")
     public UserResponse createUser(UserRegistrationRequest userRegistrationRequest) {
         if (userRepository.existsByEmail(userRegistrationRequest.getEmail())) {
             throw new UserExistException("Email already exists");

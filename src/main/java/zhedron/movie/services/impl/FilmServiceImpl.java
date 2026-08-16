@@ -2,6 +2,7 @@ package zhedron.movie.services.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,6 +39,7 @@ public class FilmServiceImpl implements FilmService {
     }
 
     @Override
+    @CachePut(value = "films", key = "#result.id()")
     public FilmResponse uploadFilm(MultipartFile video) throws IOException {
         Film film = new Film();
 

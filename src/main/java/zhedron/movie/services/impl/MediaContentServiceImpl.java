@@ -3,6 +3,7 @@ package zhedron.movie.services.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.mp4parser.IsoFile;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
@@ -60,6 +61,7 @@ public class MediaContentServiceImpl implements MediaContentService {
     }
 
     @Override
+    @CachePut(value = "mediaContents", key = "#result.id()")
     public MediaContentResponse createMediaContent(MediaContentRequest mediaContentRequest, List<MultipartFile> images) throws IOException {
         Path path = Paths.get(DIRECTORY);
 
