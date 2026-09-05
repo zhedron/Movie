@@ -65,7 +65,7 @@ docker compose up
 ```
 
 # Secret Key
-Link for generate secret key for JWT
+Link for generate secret key JWT
 * [Secret Key](https://jwtsecrets.com/#generator)
 
 # API Documentation
