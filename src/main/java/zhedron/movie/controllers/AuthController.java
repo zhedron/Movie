@@ -8,11 +8,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,9 +22,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import zhedron.movie.dto.response.TokenResponse;
 import zhedron.movie.dto.response.request.LoginRequest;
+import zhedron.movie.entity.RefreshToken;
 import zhedron.movie.entity.User;
+import zhedron.movie.exceptions.RefreshTokenNotFoundException;
 import zhedron.movie.services.JwtService;
+import zhedron.movie.services.RefreshTokenService;
 import zhedron.movie.services.UserService;
 
 import java.time.Duration;
@@ -38,11 +41,13 @@ import java.util.Map;
 public class AuthController {
     private final JwtService jwtService;
     private final UserService userService;
+    private final RefreshTokenService refreshTokenService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthController(JwtService jwtService, UserService userService, AuthenticationManager authenticationManager) {
+    public AuthController(JwtService jwtService, UserService userService, RefreshTokenService refreshTokenService, AuthenticationManager authenticationManager) {
         this.jwtService = jwtService;
         this.userService = userService;
+        this.refreshTokenService = refreshTokenService;
         this.authenticationManager = authenticationManager;
     }
 
@@ -118,24 +123,108 @@ public class AuthController {
                 if (authentication.isAuthenticated()) {
                     User user = userService.findByEmail(loginRequest.getEmail());
 
-                    String token = jwtService.generateToken(user);
+                    String accessToken = jwtService.generateToken(user);
+                    String refreshToken = refreshTokenService.generateRefreshToken(user.getEmail());
 
-                    ResponseCookie cookie = ResponseCookie.from("accessToken")
+                    ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
                             .httpOnly(true)
                             .maxAge(Duration.ofHours(1))
                             .path("/")
-                            .value(token)
                             .build();
 
-                    Map<String, String> response = new HashMap<>();
+                    ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+                            .httpOnly(true)
+                            .path("/api/refreshtoken")
+                            .maxAge(Duration.ofDays(7))
+                            .build();
 
-                    response.put("token", token);
-
-                    return ResponseEntity.status(HttpStatus.OK).header(HttpHeaders.SET_COOKIE, cookie.toString()).body(response);
+                    return ResponseEntity.status(HttpStatus.OK)
+                            .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+                            .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                            .body(new TokenResponse(accessToken, refreshToken));
                 }
             } catch (BadCredentialsException e) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
             }
         return null;
+    }
+
+    @PostMapping("/refreshtoken")
+    @Operation(
+            summary = "Refresh Tokens",
+            description = "Extracts the Refresh token from the request cookie. If valid, generates and returns a new token pair in both response body and cookies."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Tokens refreshed successfully",
+                    headers = {
+                            @Header(
+                                    name = HttpHeaders.SET_COOKIE,
+                                    description = "Updated HttpOnly cookies for access token and refresh token",
+                                    schema = @Schema(type = "string", example = "accessToken=eyJhbGci...; Path=/; Max-Age=3600; HttpOnly")
+                            )
+                    },
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = TokenResponse.class)
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Refresh token missing from Cookie or not found in database",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Token Not Found",
+                                            summary = "Token does not exist in database",
+                                            value = "{\"message\": \"Refresh token not found\"}"
+                                    )
+                            }
+                    )
+            )
+    })
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+        String token = null;
+
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("refreshToken")) {
+                    token = cookie.getValue();
+                }
+            }
+        }
+
+        if (token != null) {
+           return refreshTokenService.findByRefreshToken(token)
+                   .map(refreshTokenService::validateToken)
+                   .map(RefreshToken::getUser)
+                   .map(user -> {
+                      String accessToken = jwtService.generateToken(user);
+                      String refreshToken = refreshTokenService.generateRefreshToken(user.getEmail());
+
+                      ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
+                              .httpOnly(true)
+                              .maxAge(Duration.ofHours(1))
+                              .path("/")
+                              .build();
+
+                      ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+                              .httpOnly(true)
+                              .maxAge(Duration.ofDays(7))
+                              .path("/api/refreshtoken")
+                              .build();
+
+                      return ResponseEntity.status(HttpStatus.OK)
+                              .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+                              .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                              .body(new TokenResponse(accessToken, refreshToken));
+                   }).orElseThrow(() -> new RefreshTokenNotFoundException("Refresh token not found"));
+        }
+
+        return ResponseEntity.notFound().build();
     }
 }

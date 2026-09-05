@@ -25,34 +25,6 @@ import zhedron.movie.services.impl.UserDetailsServiceImpl;
 public class SecurityConfig {
     private final JwtFilter jwtFilter;
 
-    /*private final String[] PUBLIC_ENDPOINTS = {
-            "/api/user/registration",
-            "/api/login",
-            "/api/mediacontent/{id}",
-            "/api/mediacontent",
-            "/api/mediacontent/start-date/end-date",
-            "/api/season/{id}",
-            "/api/film/{id}",
-            "/api/episode/{id}"
-    };
-
-    private final String[] ADMIN_ENDPOINTS = {
-            "/api/mediacontent/create",
-            "/api/mediacontent/delete/{id}",
-            "/api/mediacontent/change-status/{id}",
-            "/api/mediacontent/film",
-            "/api/mediacontent/season",
-            "/api/mediacontent/film/delete",
-            "/api/mediacontent/season/delete",
-            "/api/mediacontent/update/{id}",
-            "/api/season/create",
-            "/api/season/delete/{id}",
-            "/api/film/upload",
-            "/api/film/delete/{id}",
-            "/api/episode/upload",
-            "/api/episode/delete/{id}"
-    };*/
-
     private final String[] PUBLIC_ENDPOINTS = {
             "/api/user/registration",
             "/api/login",
@@ -66,6 +38,7 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/swagger-ui.html",
             "/actuator",
+            "/api/refreshtoken"
     };
 
     private final String[] ADMIN_ENDPOINTS = {
