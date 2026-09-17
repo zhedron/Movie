@@ -360,4 +360,14 @@ public class MediaContentController {
     public ResponseEntity<PaginatedResponse> getMediaContentsBetweenStartReleaseDateAndEndReleaseDate(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam LocalDate startDate, @RequestParam LocalDate endDate) {
         return ResponseEntity.ok(mediaContentService.getMediaContentsBetweenStartReleaseDateAndEndReleaseDate(page, size, startDate, endDate));
     }
+
+    @PostMapping("/actor/{mediaContentId}/{actorId}")
+    public ResponseEntity<MediaContentResponse> addActorToMediaContent(@PathVariable long mediaContentId, @PathVariable long actorId) {
+        return ResponseEntity.ok(mediaContentService.addActorToMediaContent(mediaContentId, actorId));
+    }
+
+    @DeleteMapping("/delete/actor/{mediaContentId}/{actorId}")
+    public ResponseEntity<MediaContentResponse> deleteActorFromMediaContent(@PathVariable long mediaContentId, @PathVariable long actorId) {
+        return ResponseEntity.ok(mediaContentService.deleteActorFromMediaContent(mediaContentId, actorId));
+    }
 }

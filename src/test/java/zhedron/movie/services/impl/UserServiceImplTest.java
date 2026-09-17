@@ -68,7 +68,7 @@ class UserServiceImplTest {
         assertEquals("neo", userToSave.getUsername());
         assertEquals("neo@example.com", userToSave.getEmail());
         assertEquals("encoded-password", userToSave.getPassword());
-        assertEquals(Role.ADMIN, userToSave.getRole());
+        assertEquals(Role.USER, userToSave.getRole());
         assertNotNull(userToSave.getCreatedAt());
         assertSame(expectedResponse, response);
     }

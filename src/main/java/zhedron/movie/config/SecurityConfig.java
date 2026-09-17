@@ -23,35 +23,45 @@ import zhedron.movie.services.impl.UserDetailsServiceImpl;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-    private final JwtFilter jwtFilter;
 
-    private final String[] PUBLIC_ENDPOINTS = {
+    private static final String[] PUBLIC_ENDPOINTS = {
             "/api/user/registration",
             "/api/login",
-            "/api/mediacontent/{id}",
-            "/api/mediacontent",
-            "/api/mediacontent/start-date/end-date",
-            "/api/season/*",
-            "/api/episode/*",
-            "/api/film/{id:\\d}",
+            "/api/refreshtoken",
             "/v3/api-docs/**",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/actuator",
-            "/api/refreshtoken"
+            "/actuator"
     };
 
-    private final String[] ADMIN_ENDPOINTS = {
+    private static final String[] PUBLIC_GET_ENDPOINTS = {
+            "/api/mediacontent",
+            "/api/mediacontent/{id:\\d+}",
+            "/api/mediacontent/start-date/end-date",
+            "/api/season/{id:\\d+}",
+            "/api/episode/{id:\\d+}",
+            "/api/film/{id:\\d+}",
+            "/api/actor/{actorId:\\d+}",
+            "/api/actor/stream/{actorId:\\d+}",
+            "/api/comment/{id:\\d+}/{mediaContentId:\\d+}"
+    };
+
+    private static final String[] ADMIN_ENDPOINTS = {
             "/api/mediacontent/**",
             "/api/season/**",
             "/api/film/**",
             "/api/episode/**",
-            "/api/user/change-role/*"
+            "/api/user/change-role/**",
+            "/api/actor/create",
+            "/api/actor/delete/**",
+            "/api/actor/update/**"
     };
 
-    private final String[] AUTHORIZED_ENDPOINTS = {
+    private static final String[] AUTHENTICATED_ENDPOINTS = {
             "/api/comment/**"
     };
+
+    private final JwtFilter jwtFilter;
 
     public SecurityConfig(JwtFilter jwtFilter) {
         this.jwtFilter = jwtFilter;
@@ -59,13 +69,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> {
-                    auth.requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                            .requestMatchers(ADMIN_ENDPOINTS).hasAuthority("ADMIN")
-                            .requestMatchers(AUTHORIZED_ENDPOINTS).authenticated()
-                            .requestMatchers(HttpMethod.GET, "/api/comment/{id}/{mediaContentId}").permitAll();
-                }).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
+                        .requestMatchers(HttpMethod.GET, PUBLIC_GET_ENDPOINTS).permitAll()
+                        .requestMatchers(ADMIN_ENDPOINTS).hasAuthority("ADMIN")
+                        .requestMatchers(AUTHENTICATED_ENDPOINTS).authenticated()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

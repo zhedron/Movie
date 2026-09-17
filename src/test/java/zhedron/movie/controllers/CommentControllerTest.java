@@ -75,9 +75,12 @@ class CommentControllerTest {
     }
 
     @Test
-    void findCommentRejectsAnonymousUser() throws Exception {
+    void findCommentAllowsAnonymousUser() throws Exception {
+        when(commentService.findById(3L, 9L)).thenReturn(new CommentResponse(3L, "Nice", null, null, null, false));
+
         mockMvc.perform(get("/api/comment/3/9"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(3));
     }
 
     @Test

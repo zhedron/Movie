@@ -18,6 +18,7 @@ import zhedron.movie.entity.User;
 import zhedron.movie.enums.Role;
 import zhedron.movie.repository.UserRepository;
 import zhedron.movie.services.JwtService;
+import zhedron.movie.services.RefreshTokenService;
 import zhedron.movie.services.UserService;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -38,6 +39,8 @@ class AuthControllerTest {
     @MockitoBean
     private UserService userService;
     @MockitoBean
+    private RefreshTokenService refreshTokenService;
+    @MockitoBean
     private AuthenticationManager authenticationManager;
     @MockitoBean
     private UserRepository userRepository;
@@ -54,14 +57,18 @@ class AuthControllerTest {
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(userService.findByEmail("neo@example.com")).thenReturn(user);
         when(jwtService.generateToken(user)).thenReturn("jwt-token");
+        when(refreshTokenService.generateRefreshToken("neo@example.com")).thenReturn("refresh-token");
 
         mockMvc.perform(post("/api/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("jwt-token"))
+                .andExpect(jsonPath("$.accessToken").value("jwt-token"))
+                .andExpect(jsonPath("$.refreshToken").value("refresh-token"))
                 .andExpect(cookie().httpOnly("accessToken", true))
-                .andExpect(cookie().value("accessToken", "jwt-token"));
+                .andExpect(cookie().value("accessToken", "jwt-token"))
+                .andExpect(cookie().httpOnly("refreshToken", true))
+                .andExpect(cookie().value("refreshToken", "refresh-token"));
     }
 
     @Test

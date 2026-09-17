@@ -32,4 +32,8 @@ public interface MediaContentService {
     PaginatedResponse findAll(int page, int size);
 
     PaginatedResponse getMediaContentsBetweenStartReleaseDateAndEndReleaseDate(int page, int size, LocalDate startReleaseDate, LocalDate endReleaseDate);
+
+    MediaContentResponse addActorToMediaContent(long mediaContentId, long actorId);
+
+    MediaContentResponse deleteActorFromMediaContent(long mediaContentId, long actorId);
 }

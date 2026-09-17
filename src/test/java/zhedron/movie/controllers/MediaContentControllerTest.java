@@ -148,6 +148,6 @@ class MediaContentControllerTest {
     }
 
     private static MediaContentResponse response(long id, Status status) {
-        return new MediaContentResponse(id, "Title", "Description", LocalDate.of(2026, 1, 1), 0, List.of(), null, List.of(), status, null, "Studio", List.of());
+        return new MediaContentResponse(id, "Title", "Description", LocalDate.of(2026, 1, 1), 0, List.of(), null, List.of(), status, null, "Studio", List.of(), List.of(), List.of());
     }
 }

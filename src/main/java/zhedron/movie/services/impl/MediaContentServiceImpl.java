@@ -15,16 +15,14 @@ import org.springframework.web.multipart.MultipartFile;
 import zhedron.movie.dto.response.MediaContentResponse;
 import zhedron.movie.dto.response.PaginatedResponse;
 import zhedron.movie.dto.response.request.MediaContentRequest;
-import zhedron.movie.entity.Episode;
-import zhedron.movie.entity.Film;
-import zhedron.movie.entity.MediaContent;
-import zhedron.movie.entity.Season;
+import zhedron.movie.entity.*;
 import zhedron.movie.enums.Status;
 import zhedron.movie.exceptions.*;
 import zhedron.movie.mappers.MediaContentMapper;
 import zhedron.movie.repository.FilmRepository;
 import zhedron.movie.repository.MediaContentRepository;
 import zhedron.movie.repository.SeasonRepository;
+import zhedron.movie.services.ActorService;
 import zhedron.movie.services.MediaContentService;
 import zhedron.movie.services.UserService;
 
@@ -51,13 +49,15 @@ public class MediaContentServiceImpl implements MediaContentService {
     private final String DIRECTORY = "cover_art/";
 
     private final UserService userService;
+    private final ActorService actorService;
 
-    public MediaContentServiceImpl(MediaContentRepository mediaContentRepository, FilmRepository filmRepository, SeasonRepository seasonRepository, MediaContentMapper mediaContentMapper, UserService userService) {
+    public MediaContentServiceImpl(MediaContentRepository mediaContentRepository, FilmRepository filmRepository, SeasonRepository seasonRepository, MediaContentMapper mediaContentMapper, UserService userService, ActorService actorService) {
         this.mediaContentRepository = mediaContentRepository;
         this.filmRepository = filmRepository;
         this.seasonRepository = seasonRepository;
         this.mediaContentMapper = mediaContentMapper;
         this.userService = userService;
+        this.actorService = actorService;
     }
 
     @Override
@@ -73,10 +73,14 @@ public class MediaContentServiceImpl implements MediaContentService {
 
         List<String> fileNames = new ArrayList<>();
 
+        List<String> contentTypes = new ArrayList<>();
+
         for (MultipartFile image : images) {
             String fileName = UUID.randomUUID().toString() + "_" + image.getOriginalFilename();
 
             fileNames.add(fileName);
+
+            contentTypes.add(image.getContentType());
 
             Path imageFile = Paths.get(DIRECTORY).resolve(fileName).normalize();
 
@@ -92,6 +96,7 @@ public class MediaContentServiceImpl implements MediaContentService {
         mediaContent.setStatus(Status.PRIVATE);
         mediaContent.setCompanyName(mediaContentRequest.getCompanyName());
         mediaContent.setUser(userService.getCurrentUser());
+        mediaContent.setContentTypes(contentTypes);
 
         MediaContent savedMediaContent = mediaContentRepository.save(mediaContent);
 
@@ -353,5 +358,40 @@ public class MediaContentServiceImpl implements MediaContentService {
                 pageMediaContent.isFirst(),
                 pageMediaContent.isLast()
         );
+    }
+
+    @Override
+    public MediaContentResponse addActorToMediaContent(long mediaContentId, long actorId) {
+        Actor actor = actorService.findById(actorId);
+
+        MediaContent mediaContent = mediaContentRepository.findById(mediaContentId).orElseThrow(() -> new MediaContentNotFoundException("Media Content not found with " + mediaContentId));
+
+        if (mediaContent.getActors().contains(actor)) {
+            throw new ActorInMediaContentExistException("Actor already exists in Media Content");
+        }
+
+        mediaContent.getActors().add(actor);
+
+        MediaContent addedActorToMediaContent = mediaContentRepository.save(mediaContent);
+
+        return mediaContentMapper.toMediaContentResponse(addedActorToMediaContent);
+    }
+
+    @Override
+    public MediaContentResponse deleteActorFromMediaContent(long mediaContentId, long actorId) {
+        MediaContent mediaContent = mediaContentRepository.findById(mediaContentId).orElseThrow(() -> new MediaContentNotFoundException("Media Content not found with " + mediaContentId));
+
+        Actor actor = actorService.findById(actorId);
+
+        if (!mediaContent.getActors().contains(actor)) {
+            throw new ActorInMediaContentNotExistException("Actor not exists in Media Content");
+        }
+
+        mediaContent.getActors().remove(actor);
+        actor.getMediaContents().remove(mediaContent);
+
+        MediaContent deletedActorToMediaContent = mediaContentRepository.save(mediaContent);
+
+        return mediaContentMapper.toMediaContentResponse(deletedActorToMediaContent);
     }
 }

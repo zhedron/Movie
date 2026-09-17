@@ -125,6 +125,6 @@ class MediaContentServiceImplTest {
     }
 
     private static MediaContentResponse response(long id, Status status) {
-        return new MediaContentResponse(id, "Title " + id, "Description " + id, null, 0, null, null, List.of(), status, null, null, List.of());
+        return new MediaContentResponse(id, "Title " + id, "Description " + id, null, 0, null, null, List.of(), status, null, null, List.of(), List.of(), List.of());
     }
 }

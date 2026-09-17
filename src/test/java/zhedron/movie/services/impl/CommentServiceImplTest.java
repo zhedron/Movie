@@ -22,6 +22,7 @@ import zhedron.movie.services.MediaContentService;
 import zhedron.movie.services.UserService;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,7 +58,7 @@ class CommentServiceImplTest {
         user.setId(3L);
         CommentRequest request = new CommentRequest();
         request.setText("Great film");
-        MediaContentResponse mediaResponse = new MediaContentResponse(8L, "Title", "Description", null, 0, null, null, null, null, null, null, null);
+        MediaContentResponse mediaResponse = new MediaContentResponse(8L, "Title", "Description", null, 0, null, null, null, null, null, null, null, List.of(), List.of());
         MediaContent mediaContent = new MediaContent();
         Comment savedComment = new Comment();
         savedComment.setId(17L);
@@ -85,7 +86,7 @@ class CommentServiceImplTest {
     void findByIdThrowsWhenCommentIsNotAttachedToMediaContent() {
         Comment comment = new Comment();
         comment.setId(6L);
-        MediaContentResponse mediaResponse = new MediaContentResponse(1L, "Title", "Description", null, 0, null, null, null, null, null, null, null);
+        MediaContentResponse mediaResponse = new MediaContentResponse(1L, "Title", "Description", null, 0, null, null, null, null, null, null, null, List.of(), List.of());
         MediaContent mediaContent = new MediaContent();
         mediaContent.setComments(new ArrayList<>());
         when(commentRepository.findById(6L)).thenReturn(Optional.of(comment));

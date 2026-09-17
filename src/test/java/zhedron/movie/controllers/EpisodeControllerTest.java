@@ -75,7 +75,7 @@ class EpisodeControllerTest {
                 "episodeCreateRequest", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
 
         mockMvc.perform(multipart("/api/episode/upload").file(video).file(requestPart))
-                .andExpect(status().isCreated());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -88,7 +88,7 @@ class EpisodeControllerTest {
                 "episodeCreateRequest", "", MediaType.APPLICATION_JSON_VALUE, objectMapper.writeValueAsBytes(request));
 
         mockMvc.perform(multipart("/api/episode/upload").file(video).file(requestPart))
-                .andExpect(status().isCreated());
+                .andExpect(status().isForbidden());
     }
 
     @Test
