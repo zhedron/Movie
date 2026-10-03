@@ -20,7 +20,6 @@ import zhedron.movie.dto.response.request.EpisodeCreateRequest;
 import zhedron.movie.services.EpisodeService;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -141,8 +140,10 @@ public class EpisodeController {
 
             Resource resource = new UrlResource(path.toUri());
 
-            return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.parseMediaType(episodeResponse.contentType())).body(resource);
-        } catch (MalformedURLException e) {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.parseMediaType(episodeResponse.contentType()))
+                    .body(resource);
+        } catch (IOException e) {
             return ResponseEntity.badRequest().body("Failed to load file: " + e.getMessage());
         }
     }

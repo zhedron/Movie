@@ -18,7 +18,6 @@ import zhedron.movie.dto.response.FilmResponse;
 import zhedron.movie.services.FilmService;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -139,9 +138,11 @@ public class FilmController {
 
             Resource resource = new UrlResource(path.toUri());
 
-            return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.parseMediaType(foundFilm.contentType())).body(resource);
-        } catch (MalformedURLException e) {
-            return ResponseEntity.badRequest().body("Failed to load video file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.parseMediaType(foundFilm.contentType()))
+                    .body(resource);
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body("Failed to load video file");
         }
     }
 }

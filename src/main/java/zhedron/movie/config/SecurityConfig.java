@@ -38,6 +38,7 @@ public class SecurityConfig {
             "/api/mediacontent",
             "/api/mediacontent/{id:\\d+}",
             "/api/mediacontent/start-date/end-date",
+            "/api/mediacontent/stream/photo/{id:\\d+}",
             "/api/season/{id:\\d+}",
             "/api/episode/{id:\\d+}",
             "/api/film/{id:\\d+}",

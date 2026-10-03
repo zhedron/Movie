@@ -22,7 +22,6 @@ import zhedron.movie.mappers.ActorMapper;
 import zhedron.movie.services.ActorService;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -138,20 +137,22 @@ public class ActorController {
                     )
             )
     })
-    public ResponseEntity<?> streamPhotos(@PathVariable long actorId, @RequestParam int photoSize) {
+    public ResponseEntity<?> streamPhotos(@PathVariable long actorId, @RequestParam int size) {
         try {
             Actor actor = actorService.findById(actorId);
 
-            String photoURL = actor.getPhotos().get(photoSize);
+            String photoURL = actor.getPhotos().get(size - 1);
 
-            String contentType = actor.getContentTypes().get(photoSize);
+            String contentType = actor.getContentTypes().get(size - 1);
 
             Path path = Paths.get("images/").resolve(photoURL).normalize();
 
             Resource resource = new UrlResource(path.toUri());
 
-            return ResponseEntity.status(HttpStatus.OK).contentType(MediaType.parseMediaType(contentType)).body(resource);
-        } catch (MalformedURLException e) {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(resource);
+        } catch (IOException e) {
             return ResponseEntity.badRequest().body("Invalid url");
         } catch (IndexOutOfBoundsException e) {
             return ResponseEntity.badRequest().body("Count of size more than actor has photos");

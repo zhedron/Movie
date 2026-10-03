@@ -104,7 +104,7 @@ public class MediaContentServiceImpl implements MediaContentService {
     }
 
     @Override
-    @Cacheable(value = "mediaContents", key = "#id")
+  //  @Cacheable(value = "mediaContents", key = "#id")
     public MediaContentResponse findById(long id) {
         MediaContent mediaContent = mediaContentRepository.findById(id).orElseThrow(() -> new MediaContentNotFoundException("Media Content not found with id " + id));
 

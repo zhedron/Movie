@@ -2,6 +2,7 @@ package zhedron.movie.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -20,6 +21,9 @@ import zhedron.movie.repository.UserRepository;
 import zhedron.movie.services.MediaContentService;
 
 import java.time.LocalDate;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -37,6 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(MediaContentController.class)
 @Import({SecurityConfig.class, ControllerSecurityTestConfig.class})
 class MediaContentControllerTest {
+    private static final Path STREAM_IMAGE = Path.of("cover_art", "media-content-controller-stream.png");
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     @Autowired
     private MockMvc mockMvc;
@@ -44,6 +49,11 @@ class MediaContentControllerTest {
     private MediaContentService mediaContentService;
     @MockitoBean
     private UserRepository userRepository;
+
+    @AfterEach
+    void cleanStreamImage() throws IOException {
+        Files.deleteIfExists(STREAM_IMAGE);
+    }
 
     @Test
     @WithMockUser(authorities = "ADMIN")
@@ -135,6 +145,20 @@ class MediaContentControllerTest {
                         .param("filmId", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(8));
+    }
+
+    @Test
+    void streamPhotoMediaContentUsesRequestedPhotoContentType() throws Exception {
+        Files.write(STREAM_IMAGE, "image".getBytes());
+        MediaContentResponse mediaContent = new MediaContentResponse(
+                8L, "Title", "Description", LocalDate.of(2026, 1, 1), 0,
+                List.of(STREAM_IMAGE.getFileName().toString()), null, List.of(), Status.PUBLIC,
+                null, "Studio", List.of(), List.of(MediaType.IMAGE_PNG_VALUE), List.of());
+        when(mediaContentService.findById(8L)).thenReturn(mediaContent);
+
+        mockMvc.perform(get("/api/mediacontent/stream/photo/8").param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.IMAGE_PNG));
     }
 
     private static MediaContentRequest mediaContentRequest() {

@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,8 @@ import zhedron.movie.enums.Status;
 import zhedron.movie.services.MediaContentService;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -369,5 +373,46 @@ public class MediaContentController {
     @DeleteMapping("/delete/actor/{mediaContentId}/{actorId}")
     public ResponseEntity<MediaContentResponse> deleteActorFromMediaContent(@PathVariable long mediaContentId, @PathVariable long actorId) {
         return ResponseEntity.ok(mediaContentService.deleteActorFromMediaContent(mediaContentId, actorId));
+    }
+
+    @GetMapping("/stream/photo/{id}")
+    @Operation(
+            summary = "Stream media content cover art",
+            description = "Streams the selected cover-art image for a media content entry by its zero-based cover-art index."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Cover-art image streamed successfully",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                            schema = @Schema(type = "string", format = "binary")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Image not found",
+                    content = @Content(
+                            mediaType = MediaType.TEXT_PLAIN_VALUE,
+                            examples = @ExampleObject(name = "Image Load Failure", value = "Not found image")
+                    )
+            )
+    })
+    public ResponseEntity<?> streamPhotoMediaContent(@PathVariable long id, @RequestParam int size) {
+        try {
+            MediaContentResponse mediaContentResponse = mediaContentService.findById(id);
+
+            String fileName = mediaContentResponse.coverArts().get(size - 1);
+
+            Path path = Paths.get("cover_art/").resolve(fileName).normalize();
+
+            Resource resource = new UrlResource(path.toUri());
+
+            return ResponseEntity.status(HttpStatus.OK)
+                    .contentType(MediaType.parseMediaType(mediaContentResponse.contentTypes().get(size - 1)))
+                    .body(resource);
+        } catch (IndexOutOfBoundsException | IOException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Not found image");
+        }
     }
 }
