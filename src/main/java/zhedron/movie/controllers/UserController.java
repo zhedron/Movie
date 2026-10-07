@@ -11,11 +11,16 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import zhedron.movie.dto.response.UserResponse;
 import zhedron.movie.dto.response.request.UserRegistrationRequest;
 import zhedron.movie.enums.Role;
 import zhedron.movie.services.UserService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -46,6 +51,7 @@ public class UserController {
                     description = "Bad Request — Validation failure or email already in use",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(type = "object", implementation = Map.class),
                             examples = {
                                     @ExampleObject(
                                             name = "Duplicate Email Error",
@@ -55,13 +61,23 @@ public class UserController {
                                     @ExampleObject(
                                             name = "Validation Error",
                                             summary = "When required fields fail validation",
-                                            value = "{\"email\": \"Email must not be empty\"}"
+                                            value = "{\"message\": \"Email must not be empty\"}"
                                     )
                             }
                     )
             )
     })
-    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRegistrationRequest userRegistrationRequest) {
+    public ResponseEntity<?> createUser(@Valid @RequestBody UserRegistrationRequest userRegistrationRequest, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                Map<String, String> errors = new HashMap<>();
+
+                errors.put("message", error.getDefaultMessage());
+
+                return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+            }
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(userRegistrationRequest));
     }
 

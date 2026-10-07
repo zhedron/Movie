@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import zhedron.movie.dto.response.ActorResponse;
+import zhedron.movie.dto.response.MessageResponse;
 import zhedron.movie.dto.response.request.ActorRequest;
 import zhedron.movie.entity.Actor;
 import zhedron.movie.mappers.ActorMapper;
@@ -62,10 +63,11 @@ public class ActorController {
                     responseCode = "400",
                     description = "Image is empty or has unsupported content type",
                     content = @Content(
-                            mediaType = MediaType.TEXT_PLAIN_VALUE,
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
                             examples = {
-                                    @ExampleObject(name = "Empty Image", value = "Upload image file"),
-                                    @ExampleObject(name = "Invalid Image Type", value = "Invalid image type")
+                                    @ExampleObject(name = "Empty Image", value = "{\"message\": \"Upload image file\"}"),
+                                    @ExampleObject(name = "Invalid Image Type", value = "{\"message\": \"Invalid image type\"}")
                             }
                     )
             )
@@ -73,9 +75,9 @@ public class ActorController {
     public ResponseEntity<?> createActor(@RequestPart ActorRequest actorRequest, @RequestPart List<MultipartFile> images) throws IOException {
         for (MultipartFile image : images) {
             if (image.isEmpty()) {
-                return ResponseEntity.badRequest().body("Upload image file");
+                return ResponseEntity.badRequest().body(new MessageResponse("Upload image file"));
             } else if (!image.getContentType().equals("image/jpeg") && !image.getContentType().equals("image/png")) {
-                return ResponseEntity.badRequest().body("Invalid image type");
+                return ResponseEntity.badRequest().body(new MessageResponse("Invalid image type"));
             }
         }
 
@@ -129,10 +131,11 @@ public class ActorController {
                     responseCode = "400",
                     description = "Invalid file URL or photo index",
                     content = @Content(
-                            mediaType = MediaType.TEXT_PLAIN_VALUE,
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
                             examples = {
-                                    @ExampleObject(name = "Invalid Url", value = "Invalid url"),
-                                    @ExampleObject(name = "Photo Index Too Large", value = "Count of size more than actor has photos")
+                                    @ExampleObject(name = "Invalid Url", value = "{\"message\": \"Invalid url\"}"),
+                                    @ExampleObject(name = "Photo Index Too Large", value = "{\"message\": \"Count of size more than actor has photos\"}")
                             }
                     )
             )
@@ -153,9 +156,9 @@ public class ActorController {
                     .contentType(MediaType.parseMediaType(contentType))
                     .body(resource);
         } catch (IOException e) {
-            return ResponseEntity.badRequest().body("Invalid url");
+            return ResponseEntity.badRequest().body(new MessageResponse("Invalid url"));
         } catch (IndexOutOfBoundsException e) {
-            return ResponseEntity.badRequest().body("Count of size more than actor has photos");
+            return ResponseEntity.badRequest().body(new MessageResponse("Count of size more than actor has photos"));
         }
     }
 
@@ -169,8 +172,9 @@ public class ActorController {
                     responseCode = "200",
                     description = "Actor deleted successfully",
                     content = @Content(
-                            mediaType = MediaType.TEXT_PLAIN_VALUE,
-                            examples = @ExampleObject(name = "Success", value = "Successfully deleted actor")
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
+                            examples = @ExampleObject(name = "Success", value = "{\"message\": \"Successfully deleted actor\"}")
                     )
             ),
             @ApiResponse(
@@ -182,10 +186,10 @@ public class ActorController {
                     )
             )
     })
-    public ResponseEntity<String> deleteActorById(@PathVariable long actorId) {
+    public ResponseEntity<MessageResponse> deleteActorById(@PathVariable long actorId) {
         actorService.deleteById(actorId);
 
-        return ResponseEntity.ok().body("Successfully deleted actor");
+        return ResponseEntity.ok().body(new MessageResponse("Successfully deleted actor"));
     }
 
     @PatchMapping("/update/{actorId}")

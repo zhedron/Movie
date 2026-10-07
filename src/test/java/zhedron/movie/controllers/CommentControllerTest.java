@@ -16,13 +16,13 @@ import zhedron.movie.repository.UserRepository;
 import zhedron.movie.services.CommentService;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -66,6 +66,21 @@ class CommentControllerTest {
 
     @Test
     @WithMockUser
+    void createCommentReturnsValidationMessageForBlankText() throws Exception {
+        CommentRequest request = new CommentRequest();
+        request.setText("");
+
+        mockMvc.perform(post("/api/comment/9")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Write your comment, text must not be empty"));
+
+        verify(commentService, never()).addComment(any(CommentRequest.class), org.mockito.ArgumentMatchers.eq(9L));
+    }
+
+    @Test
+    @WithMockUser
     void findCommentDelegatesToService() throws Exception {
         when(commentService.findById(3L, 9L)).thenReturn(new CommentResponse(3L, "Nice", null, null, null, false));
 
@@ -88,7 +103,7 @@ class CommentControllerTest {
     void deleteCommentReturnsMessage() throws Exception {
         mockMvc.perform(delete("/api/comment/delete/3"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Comment deleted successfully"));
+                .andExpect(jsonPath("$.message").value("Comment deleted successfully"));
 
         verify(commentService).deleteComment(3L);
     }
@@ -113,5 +128,20 @@ class CommentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.edited").value(true))
                 .andExpect(jsonPath("$.text").value("Updated"));
+    }
+
+    @Test
+    @WithMockUser
+    void editCommentReturnsValidationMessageForBlankText() throws Exception {
+        CommentRequest request = new CommentRequest();
+        request.setText("");
+
+        mockMvc.perform(put("/api/comment/edit/3")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Write your comment, text must not be empty"));
+
+        verify(commentService, never()).editComment(any(CommentRequest.class), org.mockito.ArgumentMatchers.eq(3L));
     }
 }

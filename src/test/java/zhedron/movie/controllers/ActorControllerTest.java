@@ -78,7 +78,7 @@ class ActorControllerTest {
 
         mockMvc.perform(multipart("/api/actor/create").file(requestPart).file(image))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Invalid image type"));
+                .andExpect(jsonPath("$.message").value("Invalid image type"));
     }
 
     @Test
@@ -112,7 +112,7 @@ class ActorControllerTest {
     void deleteActorReturnsMessage() throws Exception {
         mockMvc.perform(delete("/api/actor/delete/5"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Successfully deleted actor"));
+                .andExpect(jsonPath("$.message").value("Successfully deleted actor"));
 
         verify(actorService).deleteById(5L);
     }

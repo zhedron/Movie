@@ -18,12 +18,12 @@ import zhedron.movie.services.SeasonService;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -54,6 +54,20 @@ class SeasonControllerTest {
     }
 
     @Test
+    @WithMockUser(authorities = "ADMIN")
+    void createSeasonReturnsValidationMessageForInvalidNumber() throws Exception {
+        SeasonCreateRequest request = new SeasonCreateRequest();
+
+        mockMvc.perform(post("/api/season/create")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Enter a number"));
+
+        verify(seasonService, never()).createSeason(any(SeasonCreateRequest.class));
+    }
+
+    @Test
     @WithMockUser(authorities = "USER")
     void getSeasonByIdReturnsSeason() throws Exception {
         when(seasonService.findById(4L)).thenReturn(new SeasonResponse(4L, List.of(), 2));
@@ -80,7 +94,7 @@ class SeasonControllerTest {
     void deleteSeasonReturnsMessage() throws Exception {
         mockMvc.perform(delete("/api/season/delete/4"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Season deleted successfully"));
+                .andExpect(jsonPath("$.message").value("Season deleted successfully"));
 
         verify(seasonService).deleteById(4L);
     }

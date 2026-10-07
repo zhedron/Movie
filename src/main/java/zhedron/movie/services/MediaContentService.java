@@ -35,5 +35,5 @@ public interface MediaContentService {
 
     MediaContentResponse addActorToMediaContent(long mediaContentId, long actorId);
 
-    MediaContentResponse deleteActorFromMediaContent(long mediaContentId, long actorId);
+    MediaContentResponse removeActorFromMediaContent(long mediaContentId, long actorId);
 }

@@ -22,6 +22,8 @@ import zhedron.movie.services.RefreshTokenService;
 import zhedron.movie.services.UserService;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
@@ -82,5 +84,20 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void loginReturnsValidationMessageForMissingCredentials() throws Exception {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("");
+        request.setPassword("matrix");
+
+        mockMvc.perform(post("/api/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Write your email, email must not be empty"));
+
+        verify(authenticationManager, never()).authenticate(any());
     }
 }

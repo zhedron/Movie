@@ -56,6 +56,22 @@ class UserControllerTest {
     }
 
     @Test
+    void registrationReturnsValidationMessageForInvalidRequest() throws Exception {
+        UserRegistrationRequest request = new UserRegistrationRequest();
+        request.setUsername("");
+        request.setEmail("neo@example.com");
+        request.setPassword("matrix");
+
+        mockMvc.perform(post("/api/user/registration")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("User must not be empty"));
+
+        verify(userService, never()).createUser(any(UserRegistrationRequest.class));
+    }
+
+    @Test
     @WithMockUser(authorities = "ADMIN")
     public void changeRoleIfUserAdminIsSuccessful() throws Exception {
         when(userService.changeRole(1L, Role.ADMIN)).thenReturn(new UserResponse(1L, null, null, null, null, Role.ADMIN));

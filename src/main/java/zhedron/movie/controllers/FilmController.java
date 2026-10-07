@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import zhedron.movie.dto.response.FilmResponse;
+import zhedron.movie.dto.response.MessageResponse;
 import zhedron.movie.services.FilmService;
 
 import java.io.IOException;
@@ -49,22 +50,23 @@ public class FilmController {
                     responseCode = "400",
                     description = "Invalid upload request (missing file, empty file, or non-MP4 format)",
                     content = @Content(
-                            mediaType = MediaType.TEXT_PLAIN_VALUE,
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
                             examples = {
-                                    @ExampleObject(name = "Missing Video", value = "Video is required"),
-                                    @ExampleObject(name = "Empty File", value = "Upload video file"),
-                                    @ExampleObject(name = "Invalid Format", value = "Upload video file with mp4 format")
+                                    @ExampleObject(name = "Missing Video", value = "{\"message\": \"Video is required\"}"),
+                                    @ExampleObject(name = "Empty File", value = "{\"message\": \"Upload video file\"}"),
+                                    @ExampleObject(name = "Invalid Format", value = "{\"message\": \"Upload video file with mp4 format\"}")
                             }
                     )
             )
     })
     public ResponseEntity<?> uploadFilm(@RequestPart MultipartFile video) throws IOException {
         if (video == null) {
-            return ResponseEntity.badRequest().body("Video is required");
+            return ResponseEntity.badRequest().body(new MessageResponse("Video is required"));
         } else if (video.isEmpty()) {
-            return ResponseEntity.badRequest().body("Upload video file");
+            return ResponseEntity.badRequest().body(new MessageResponse("Upload video file"));
         } else if (!video.getContentType().equals("video/mp4")) {
-            return ResponseEntity.badRequest().body("Upload video file with mp4 format");
+            return ResponseEntity.badRequest().body(new MessageResponse("Upload video file with mp4 format"));
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(filmService.uploadFilm(video));
@@ -80,8 +82,9 @@ public class FilmController {
                     responseCode = "200",
                     description = "Film deleted successfully",
                     content = @Content(
-                            mediaType = MediaType.TEXT_PLAIN_VALUE,
-                            examples = @ExampleObject(name = "Success", value = "Film deleted successfully")
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
+                            examples = @ExampleObject(name = "Success", value = "{\"message\": \"Film deleted successfully\"}")
                     )
             ),
             @ApiResponse(
@@ -93,10 +96,10 @@ public class FilmController {
                     )
             )
     })
-    public ResponseEntity<String> deleteById(@PathVariable long id) {
+    public ResponseEntity<MessageResponse> deleteById(@PathVariable long id) {
         filmService.deleteById(id);
 
-        return ResponseEntity.ok("Film deleted successfully");
+        return ResponseEntity.ok(new MessageResponse("Film deleted successfully"));
     }
 
     @GetMapping("/{id}")
@@ -117,8 +120,9 @@ public class FilmController {
                     responseCode = "400",
                     description = "Malformed file URL or file load failure",
                     content = @Content(
-                            mediaType = MediaType.TEXT_PLAIN_VALUE,
-                            examples = @ExampleObject(name = "Load Error", value = "Failed to load video file: Invalid path")
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
+                            examples = @ExampleObject(name = "Load Error", value = "{\"message\": \"Failed to load video file\"}")
                     )
             ),
             @ApiResponse(
@@ -142,7 +146,7 @@ public class FilmController {
                     .contentType(MediaType.parseMediaType(foundFilm.contentType()))
                     .body(resource);
         } catch (IOException e) {
-            return ResponseEntity.badRequest().body("Failed to load video file");
+            return ResponseEntity.badRequest().body(new MessageResponse("Failed to load video file"));
         }
     }
 }

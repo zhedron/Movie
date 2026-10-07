@@ -7,12 +7,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import zhedron.movie.dto.response.CommentResponse;
+import zhedron.movie.dto.response.MessageResponse;
 import zhedron.movie.dto.response.request.CommentRequest;
 import zhedron.movie.services.CommentService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/comment")
@@ -43,9 +50,10 @@ public class CommentController {
                     description = "Validation error in request payload",
                     content = @Content(
                             mediaType = "application/json",
+                            schema = @Schema(type = "object", implementation = Map.class),
                             examples = @ExampleObject(
                                     name = "Validation Error",
-                                    value = "{\"text\": \"Write your comment, text must not be empty\"}"
+                                    value = "{\"message\": \"Write your comment, text must not be empty\"}"
                             )
                     )
             ),
@@ -54,6 +62,7 @@ public class CommentController {
                     description = "Media content not found",
                     content = @Content(
                             mediaType = "application/json",
+                            schema = @Schema(type = "object", implementation = Map.class),
                             examples = @ExampleObject(
                                     name = "Media Not Found",
                                     value = "{\"message\": \"Media content not found with 42\"}"
@@ -61,7 +70,17 @@ public class CommentController {
                     )
             )
     })
-    public ResponseEntity<CommentResponse> createComment(@RequestBody CommentRequest commentRequest, @PathVariable long mediaContentId) {
+    public ResponseEntity<?> createComment(@Valid @RequestBody CommentRequest commentRequest, BindingResult bindingResult, @PathVariable long mediaContentId) {
+        if (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                Map<String, String> errors = new HashMap<>();
+
+                errors.put("message", error.getDefaultMessage());
+
+                return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+            }
+        }
+
         return new ResponseEntity<>(commentService.addComment(commentRequest, mediaContentId), HttpStatus.CREATED);
     }
 
@@ -111,10 +130,11 @@ public class CommentController {
                     responseCode = "200",
                     description = "Comment deleted successfully",
                     content = @Content(
-                            mediaType = "text/plain",
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = MessageResponse.class),
                             examples = @ExampleObject(
                                     name = "Success Message",
-                                    value = "Comment deleted successfully"
+                                    value = "{\"message\": \"Comment deleted successfully\"}"
                             )
                     )
             ),
@@ -141,10 +161,10 @@ public class CommentController {
                     )
             )
     })
-    public ResponseEntity<String> deleteComment(@PathVariable long id) {
+    public ResponseEntity<MessageResponse> deleteComment(@PathVariable long id) {
         commentService.deleteComment(id);
 
-        return new ResponseEntity<>("Comment deleted successfully", HttpStatus.OK);
+        return new ResponseEntity<>(new MessageResponse("Comment deleted successfully"), HttpStatus.OK);
     }
 
     @PutMapping("/edit/{id}")
@@ -168,7 +188,7 @@ public class CommentController {
                             mediaType = "application/json",
                             examples = @ExampleObject(
                                     name = "Validation Error",
-                                    value = "{\"text\": \"Write your comment, text must not be empty\"}"
+                                    value = "{\"message\": \"Write your comment, text must not be empty\"}"
                             )
                     )
             ),
@@ -184,7 +204,17 @@ public class CommentController {
                     )
             )
     })
-    public ResponseEntity<CommentResponse> editComment(@RequestBody CommentRequest commentRequest, @PathVariable long id) {
+    public ResponseEntity<?> editComment(@RequestBody @Valid CommentRequest commentRequest, BindingResult bindingResult, @PathVariable long id) {
+        if (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                Map<String, String>  errors = new HashMap<>();
+
+                errors.put("message", error.getDefaultMessage());
+
+                return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+            }
+        }
+
         return ResponseEntity.ok(commentService.editComment(commentRequest, id));
     }
 }

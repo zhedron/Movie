@@ -19,6 +19,7 @@ import zhedron.movie.entity.*;
 import zhedron.movie.enums.Status;
 import zhedron.movie.exceptions.*;
 import zhedron.movie.mappers.MediaContentMapper;
+import zhedron.movie.repository.FavoriteRepository;
 import zhedron.movie.repository.FilmRepository;
 import zhedron.movie.repository.MediaContentRepository;
 import zhedron.movie.repository.SeasonRepository;
@@ -43,6 +44,7 @@ public class MediaContentServiceImpl implements MediaContentService {
     private final MediaContentRepository mediaContentRepository;
     private final FilmRepository filmRepository;
     private final SeasonRepository seasonRepository;
+    private final FavoriteRepository favoriteRepository;
 
     private final MediaContentMapper mediaContentMapper;
 
@@ -51,10 +53,11 @@ public class MediaContentServiceImpl implements MediaContentService {
     private final UserService userService;
     private final ActorService actorService;
 
-    public MediaContentServiceImpl(MediaContentRepository mediaContentRepository, FilmRepository filmRepository, SeasonRepository seasonRepository, MediaContentMapper mediaContentMapper, UserService userService, ActorService actorService) {
+    public MediaContentServiceImpl(MediaContentRepository mediaContentRepository, FilmRepository filmRepository, SeasonRepository seasonRepository, FavoriteRepository favoriteRepository, MediaContentMapper mediaContentMapper, UserService userService, ActorService actorService) {
         this.mediaContentRepository = mediaContentRepository;
         this.filmRepository = filmRepository;
         this.seasonRepository = seasonRepository;
+        this.favoriteRepository = favoriteRepository;
         this.mediaContentMapper = mediaContentMapper;
         this.userService = userService;
         this.actorService = actorService;
@@ -104,7 +107,7 @@ public class MediaContentServiceImpl implements MediaContentService {
     }
 
     @Override
-  //  @Cacheable(value = "mediaContents", key = "#id")
+    @Cacheable(value = "mediaContents", key = "#id")
     public MediaContentResponse findById(long id) {
         MediaContent mediaContent = mediaContentRepository.findById(id).orElseThrow(() -> new MediaContentNotFoundException("Media Content not found with id " + id));
 
@@ -138,9 +141,13 @@ public class MediaContentServiceImpl implements MediaContentService {
     @Override
     @CacheEvict(value = "mediaContents", key = "#id")
     public void deleteById(long id) {
-        if (!mediaContentRepository.existsById(id)) {
-            throw new MediaContentNotFoundException("Media Content not found with id " + id);
-        }
+        MediaContentResponse mediaContentResponseFound = findById(id);
+
+        MediaContent mediaContentFound = mediaContentMapper.toMediaContent(mediaContentResponseFound);
+
+        Favorite favorite = favoriteRepository.findByMediaContentId(mediaContentFound.getId());
+
+        favorite.getMediaContents().remove(mediaContentFound);
 
         mediaContentRepository.deleteById(id);
 
@@ -378,7 +385,7 @@ public class MediaContentServiceImpl implements MediaContentService {
     }
 
     @Override
-    public MediaContentResponse deleteActorFromMediaContent(long mediaContentId, long actorId) {
+    public MediaContentResponse removeActorFromMediaContent(long mediaContentId, long actorId) {
         MediaContent mediaContent = mediaContentRepository.findById(mediaContentId).orElseThrow(() -> new MediaContentNotFoundException("Media Content not found with " + mediaContentId));
 
         Actor actor = actorService.findById(actorId);

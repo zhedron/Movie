@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import zhedron.movie.dto.response.MessageResponse;
 import zhedron.movie.dto.response.TokenResponse;
 import zhedron.movie.dto.response.request.LoginRequest;
 import zhedron.movie.entity.RefreshToken;
@@ -82,12 +83,12 @@ public class AuthController {
                                     @ExampleObject(
                                             name = "Missing Email Error",
                                             summary = "When email field validation fails",
-                                            value = "{\"error\": \"Write your email, email must not be empty\"}"
+                                            value = "{\"message\": \"Write your email, email must not be empty\"}"
                                     ),
                                     @ExampleObject(
                                             name = "Missing Password Error",
                                             summary = "When password field validation fails",
-                                            value = "{\"error\": \"Write your password, password must not be empty\"}"
+                                            value = "{\"message\": \"Write your password, password must not be empty\"}"
                                     )
                             }
                     )
@@ -96,10 +97,11 @@ public class AuthController {
                     responseCode = "401",
                     description = "Invalid credentials provided",
                     content = @Content(
-                            mediaType = "text/plain",
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
                             examples = @ExampleObject(
                                     name = "Bad Credentials",
-                                    value = "Invalid email or password"
+                                    value = "{\"message\": \"Invalid email or password\"}"
                             )
                     )
             )
@@ -109,7 +111,7 @@ public class AuthController {
             for (FieldError error : bindingResult.getFieldErrors()) {
                 Map<String, Object> errors = new HashMap<>();
 
-                errors.put("error", error.getDefaultMessage());
+                errors.put("message", error.getDefaultMessage());
 
                 return ResponseEntity.badRequest().body(errors);
             }
@@ -144,7 +146,7 @@ public class AuthController {
                             .body(new TokenResponse(accessToken, refreshToken));
                 }
             } catch (BadCredentialsException e) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse("Invalid email or password"));
             }
         return null;
     }

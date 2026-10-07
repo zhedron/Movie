@@ -33,4 +33,7 @@ public class User {
 
     @OneToMany(mappedBy = "user")
     private List<MediaContent> mediaContents;
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.REMOVE, CascadeType.MERGE}, mappedBy = "user")
+    private List<Favorite> favorites;
 }

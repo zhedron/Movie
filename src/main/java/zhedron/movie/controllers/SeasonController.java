@@ -11,10 +11,16 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
+import zhedron.movie.dto.response.MessageResponse;
 import zhedron.movie.dto.response.SeasonResponse;
 import zhedron.movie.dto.response.request.SeasonCreateRequest;
 import zhedron.movie.services.SeasonService;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/season")
@@ -45,14 +51,25 @@ public class SeasonController {
                     description = "Validation error in request payload",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(type = "object", implementation = Map.class),
                             examples = @ExampleObject(
                                     name = "Validation Error",
-                                    value = "{\"seasonNumber\": \"Enter a number\"}"
+                                    value = "{\"message\": \"Enter a number\"}"
                             )
                     )
             )
     })
-    public ResponseEntity<SeasonResponse> createSeason(@RequestBody @Valid SeasonCreateRequest seasonCreateRequest) {
+    public ResponseEntity<?> createSeason(@RequestBody @Valid SeasonCreateRequest seasonCreateRequest, BindingResult bindingResult) {
+        if  (bindingResult.hasErrors()) {
+            for (FieldError error : bindingResult.getFieldErrors()) {
+                Map<String, String> errors = new HashMap<>();
+
+                errors.put("message", error.getDefaultMessage());
+
+                return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+            }
+        }
+
         return ResponseEntity.status(HttpStatus.CREATED).body(seasonService.createSeason(seasonCreateRequest));
     }
 
@@ -66,8 +83,9 @@ public class SeasonController {
                     responseCode = "200",
                     description = "Season deleted successfully",
                     content = @Content(
-                            mediaType = MediaType.TEXT_PLAIN_VALUE,
-                            examples = @ExampleObject(name = "Success", value = "Season deleted successfully")
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
+                            examples = @ExampleObject(name = "Success", value = "{\"message\": \"Season deleted successfully\"}")
                     )
             ),
             @ApiResponse(
@@ -79,10 +97,10 @@ public class SeasonController {
                     )
             )
     })
-    public ResponseEntity<String> deleteSeasonById(@PathVariable long id) {
+    public ResponseEntity<MessageResponse> deleteSeasonById(@PathVariable long id) {
         seasonService.deleteById(id);
 
-        return ResponseEntity.ok("Season deleted successfully");
+        return ResponseEntity.ok(new MessageResponse("Season deleted successfully"));
     }
 
     @GetMapping("{id}")
@@ -152,8 +170,9 @@ public class SeasonController {
                     responseCode = "200",
                     description = "Episode removed from season successfully",
                     content = @Content(
-                            mediaType = MediaType.TEXT_PLAIN_VALUE,
-                            examples = @ExampleObject(name = "Success", value = "Episode has been deleted from Season")
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MessageResponse.class),
+                            examples = @ExampleObject(name = "Success", value = "{\"message\": \"Episode has been deleted from Season\"}")
                     )
             ),
             @ApiResponse(
@@ -169,9 +188,9 @@ public class SeasonController {
                     )
             )
     })
-    public ResponseEntity<String> deleteEpisodeFromSeason(@RequestParam long seasonId, @RequestParam long episodeId) {
+    public ResponseEntity<MessageResponse> deleteEpisodeFromSeason(@RequestParam long seasonId, @RequestParam long episodeId) {
         seasonService.deleteEpisodeFromSeason(seasonId, episodeId);
 
-        return ResponseEntity.ok("Episode has been deleted from Season");
+        return ResponseEntity.ok(new MessageResponse("Episode has been deleted from Season"));
     }
 }

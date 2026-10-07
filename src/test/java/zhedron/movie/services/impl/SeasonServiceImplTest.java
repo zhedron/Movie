@@ -5,6 +5,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import zhedron.movie.dto.response.EpisodeResponse;
 import zhedron.movie.dto.response.SeasonResponse;
 import zhedron.movie.dto.response.request.SeasonCreateRequest;
 import zhedron.movie.entity.Episode;
@@ -16,6 +17,7 @@ import zhedron.movie.repository.EpisodeRepository;
 import zhedron.movie.repository.SeasonRepository;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -59,7 +61,7 @@ class SeasonServiceImplTest {
         season.setEpisodes(new ArrayList<>());
         Episode episode = new Episode();
         episode.setId(12L);
-        SeasonResponse expectedResponse = new SeasonResponse(4L, season.getEpisodes(), 1);
+        SeasonResponse expectedResponse = new SeasonResponse(4L, List.of(new EpisodeResponse(12L, null, 0, null)), 1);
         when(seasonRepository.findById(4L)).thenReturn(Optional.of(season));
         when(episodeRepository.findById(12L)).thenReturn(Optional.of(episode));
         when(seasonMapper.toSeasonResponse(season)).thenReturn(expectedResponse);

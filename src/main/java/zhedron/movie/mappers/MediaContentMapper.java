@@ -23,30 +23,4 @@ public interface MediaContentMapper {
     MediaContent toMediaContent(MediaContentResponse mediaContentResponse);
 
     List<MediaContentResponse> toMediaContentResponse(List<MediaContent> mediaContents);
-
-/*    default String mapActorToString(Actor a) {
-        if (a == null) return null;
-        try {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", a.getId());
-            map.put("name", a.getName());
-            map.put("surname", a.getSurname());
-            map.put("year", a.getYear());
-            map.put("age", a.getAge());
-            map.put("photos", a.getPhotos());
-            map.put("contentTypes", a.getContentTypes());
-            map.put("gender", a.getGender());
-
-            return objectMapper.writeValueAsString(map);
-        } catch (JsonProcessingException e) {
-            return "{}";
-        }
-    }
-
-    default Actor mapStringToActor(String actorStr) {
-        if (actorStr == null) return null;
-        Actor actor = new Actor();
-        actor.setName(actorStr);
-        return actor;
-    }*/
 }

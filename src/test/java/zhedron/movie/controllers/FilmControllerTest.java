@@ -18,7 +18,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,7 +50,7 @@ class FilmControllerTest {
 
         mockMvc.perform(multipart("/api/film/upload").file(video))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Upload video file with mp4 format"));
+                .andExpect(jsonPath("$.message").value("Upload video file with mp4 format"));
     }
 
     @Test
@@ -76,7 +75,7 @@ class FilmControllerTest {
     void deleteFilmReturnsMessage() throws Exception {
         mockMvc.perform(delete("/api/film/delete/6"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Film deleted successfully"));
+                .andExpect(jsonPath("$.message").value("Film deleted successfully"));
 
         verify(filmService).deleteById(6L);
     }

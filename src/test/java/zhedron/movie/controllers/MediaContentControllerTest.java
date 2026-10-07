@@ -81,7 +81,7 @@ class MediaContentControllerTest {
 
         mockMvc.perform(multipart("/api/mediacontent/create").file(requestPart).file(image))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Upload image file"));
+                .andExpect(jsonPath("$.message").value("Upload image file"));
     }
 
     @Test
@@ -130,7 +130,7 @@ class MediaContentControllerTest {
     void deleteMediaContentReturnsMessage() throws Exception {
         mockMvc.perform(delete("/api/mediacontent/delete/8"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Media Content has been deleted"));
+                .andExpect(jsonPath("$.message").value("Media Content has been deleted"));
 
         verify(mediaContentService).deleteById(8L);
     }
@@ -145,6 +145,30 @@ class MediaContentControllerTest {
                         .param("filmId", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(8));
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void addActorToMediaContentUsesPathVariables() throws Exception {
+        when(mediaContentService.addActorToMediaContent(8L, 5L)).thenReturn(response(8L, Status.PRIVATE));
+
+        mockMvc.perform(post("/api/mediacontent/actor/8/5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(8));
+
+        verify(mediaContentService).addActorToMediaContent(8L, 5L);
+    }
+
+    @Test
+    @WithMockUser(authorities = "ADMIN")
+    void removeActorFromMediaContentUsesPathVariables() throws Exception {
+        when(mediaContentService.removeActorFromMediaContent(8L, 5L)).thenReturn(response(8L, Status.PRIVATE));
+
+        mockMvc.perform(delete("/api/mediacontent/delete/actor/8/5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(8));
+
+        verify(mediaContentService).removeActorFromMediaContent(8L, 5L);
     }
 
     @Test

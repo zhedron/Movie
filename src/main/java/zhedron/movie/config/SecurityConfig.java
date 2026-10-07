@@ -59,7 +59,8 @@ public class SecurityConfig {
     };
 
     private static final String[] AUTHENTICATED_ENDPOINTS = {
-            "/api/comment/**"
+            "/api/comment/**",
+            "/api/favorite/**"
     };
 
     private final JwtFilter jwtFilter;

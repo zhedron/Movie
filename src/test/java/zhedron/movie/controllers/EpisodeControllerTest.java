@@ -21,7 +21,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -63,7 +62,7 @@ class EpisodeControllerTest {
 
         mockMvc.perform(multipart("/api/episode/upload").file(video).file(requestPart))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Upload video file"));
+                .andExpect(jsonPath("$.message").value("Upload video file"));
     }
 
     @Test
@@ -96,7 +95,7 @@ class EpisodeControllerTest {
     void deleteEpisodeReturnsMessage() throws Exception {
         mockMvc.perform(delete("/api/episode/delete/7"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Episode deleted successfully"));
+                .andExpect(jsonPath("$.message").value("Episode deleted successfully"));
 
         verify(episodeService).deleteById(7L);
     }
